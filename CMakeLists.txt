@@ -181,6 +181,10 @@ endif()
 set(target_name "cpptrace-lib")
 add_library(${target_name} ${build_type})
 
+
+# Add the -rdynamic linker option
+target_link_options(${target_name} PRIVATE "-rdynamic")
+
 # Alias to cause error at configuration time instead of link time if target is missing
 add_library(cpptrace::cpptrace ALIAS ${target_name})
 
@@ -230,6 +234,8 @@ target_compile_options(
   $<$<CXX_COMPILER_ID:GNU>:-Wuseless-cast>
   $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /permissive->
 )
+target_link_options(${target_name} PRIVATE "-rdynamic")
+
 
 if(CPPTRACE_WERROR_BUILD)
   target_compile_options(
@@ -238,6 +244,7 @@ if(CPPTRACE_WERROR_BUILD)
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>
     $<$<CXX_COMPILER_ID:MSVC>:/WX>
   )
+  target_link_options(${target_name} PRIVATE "-rdynamic")
 endif()
 
 # ---- Generate Build Info Headers ----
@@ -474,6 +481,7 @@ if(CPPTRACE_UNWIND_WITH_LIBUNWIND)
       target_compile_options(${target_name} PRIVATE ${LIBUNWIND_CFLAGS_OTHER})
       target_include_directories(${target_name} PRIVATE ${LIBUNWIND_INCLUDE_DIRS})
       target_link_libraries(${target_name} PRIVATE ${LIBUNWIND_LDFLAGS})
+      target_link_options(${target_name} PRIVATE "-rdynamic")
     endif()
   endif()
   if(NOT libunwind_FOUND)
@@ -493,6 +501,8 @@ if(CPPTRACE_UNWIND_WITH_LIBUNWIND)
     set(LIBUNWIND_LDFLAGS "-lunwind")
   endif()
   target_compile_options(${target_name} PRIVATE ${LIBUNWIND_CFLAGS_OTHER})
+  target_link_options(${target_name} PRIVATE "-rdynamic")
+
   target_include_directories(${target_name} PRIVATE ${LIBUNWIND_INCLUDE_DIRS})
   target_link_libraries(${target_name} PRIVATE ${LIBUNWIND_LDFLAGS})
   target_compile_definitions(${target_name} PUBLIC CPPTRACE_UNWIND_WITH_LIBUNWIND UNW_LOCAL_ONLY)
@@ -561,6 +571,8 @@ macro(add_test_dependencies exec_name)
   check_cxx_compiler_flag("-gdwarf-4" HAS_DWARF4)
   if(HAS_DWARF4)
     target_compile_options(${exec_name} PRIVATE "$<$<CONFIG:Debug>:-gdwarf-4>")
+    target_link_options(${target_name} PRIVATE "-rdynamic")
+
   endif()
   # TODO: add debug info for mingw clang?
   if(CPPTRACE_BUILD_TEST_RDYNAMIC)
